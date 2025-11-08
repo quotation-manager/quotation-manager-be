@@ -1,0 +1,657 @@
+{
+  "paths": {
+    "/seed": {
+      "post": {
+        "summary": "Seed test data",
+        "description": "Create specified number of test records for users, references, customers, products, locations, quotations, and items with S3 images and PDF generation (Admin only)",
+        "tags": ["Seed"],
+        "servers": [
+          {
+            "url": "http://localhost:3000/api/v1",
+            "description": "Development server (API endpoints)"
+          },
+          {
+            "url": "https://api.maruti.com/api/v1",
+            "description": "Production server (API endpoints)"
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SeedRequest"
+              },
+              "example": {
+                "count": 100
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Test data seeded successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SeedResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - Invalid count parameter",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Token required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Admin access required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error - Failed to seed test data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Clean test data",
+        "description": "Remove all test data (users, references, customers, products, locations, quotations, items) and associated S3 files (images and PDFs) from the database (Admin only)",
+        "tags": ["Seed"],
+        "servers": [
+          {
+            "url": "http://localhost:3000/api/v1",
+            "description": "Development server (API endpoints)"
+          },
+          {
+            "url": "https://api.maruti.com/api/v1",
+            "description": "Production server (API endpoints)"
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Test data cleaned up successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CleanupResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Token required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Admin access required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error - Failed to clean test data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "SeedRequest": {
+        "type": "object",
+        "required": ["count"],
+        "properties": {
+          "count": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000,
+            "example": 100,
+            "description": "Number of test records to create for each entity (users, references, customers, products, locations)"
+          }
+        }
+      },
+      "SeedResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "message": {
+            "type": "string",
+            "example": "Test data seeded successfully"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+                              "summary": {
+                  "type": "object",
+                  "properties": {
+                    "users": {
+                      "type": "integer",
+                      "description": "Number of test users created (matches request count)"
+                    },
+                    "references": {
+                      "type": "integer",
+                      "description": "Number of test references created (matches request count)"
+                    },
+                    "customers": {
+                      "type": "integer",
+                      "description": "Number of test customers created (matches request count)"
+                    },
+                    "products": {
+                      "type": "integer",
+                      "description": "Number of test products created (matches request count)"
+                    },
+                    "locations": {
+                      "type": "integer",
+                      "description": "Number of test locations created (matches request count)"
+                    },
+                    "quotations": {
+                      "type": "integer",
+                      "description": "Number of test quotations created (matches request count)"
+                    },
+                    "items": {
+                      "type": "integer",
+                      "description": "Number of test items created (1-5 per quotation)"
+                    },
+                    "total": {
+                      "type": "integer",
+                      "description": "Total number of test records created (users + references + customers + products + locations + quotations + items)"
+                    }
+                  }
+                },
+              "samples": {
+                "type": "object",
+                "properties": {
+                  "users": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/TestUser"
+                    },
+                    "description": "Sample of created test users (first 3)"
+                  },
+                  "references": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/TestReference"
+                    },
+                    "description": "Sample of created test references (first 3)"
+                  },
+                  "customers": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/TestCustomer"
+                    },
+                    "description": "Sample of created test customers (first 3)"
+                  },
+                  "products": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/TestProduct"
+                    },
+                    "description": "Sample of created test products (first 3)"
+                  },
+                  "locations": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/TestLocation"
+                    },
+                    "description": "Sample of created test locations (first 3)"
+                  },
+                  "quotations": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/TestQuotation"
+                    },
+                    "description": "Sample of created test quotations (first 3)"
+                  },
+                  "items": {
+                    "type": "string",
+                    "description": "Summary of created test items"
+                  }
+                }
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2024-01-15T10:30:45.123Z",
+                "description": "When the seeding operation was completed"
+              }
+            }
+          }
+        }
+      },
+      "CleanupResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "message": {
+            "type": "string",
+            "example": "Test data cleaned up successfully"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+                              "deleted": {
+                  "type": "object",
+                  "properties": {
+                    "users": {
+                      "type": "integer",
+                      "description": "Number of test users deleted"
+                    },
+                    "references": {
+                      "type": "integer",
+                      "description": "Number of test references deleted"
+                    },
+                    "customers": {
+                      "type": "integer",
+                      "description": "Number of test customers deleted"
+                    },
+                    "products": {
+                      "type": "integer",
+                      "description": "Number of test products deleted"
+                    },
+                    "locations": {
+                      "type": "integer",
+                      "description": "Number of test locations deleted"
+                    },
+                    "quotations": {
+                      "type": "integer",
+                      "description": "Number of test quotations deleted"
+                    },
+                    "items": {
+                      "type": "integer",
+                      "description": "Number of test items deleted"
+                    },
+                    "imagesFromS3": {
+                      "type": "integer",
+                      "description": "Number of images deleted from S3"
+                    },
+                    "pdfsFromS3": {
+                      "type": "integer",
+                      "description": "Number of PDFs deleted from S3"
+                    },
+                    "total": {
+                      "type": "integer",
+                      "description": "Total number of test records deleted"
+                    }
+                  }
+                },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2024-01-15T10:35:22.456Z",
+                "description": "When the cleanup operation was completed"
+              }
+            }
+          }
+        }
+      },
+      "TestUser": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "15167593-beb4-455c-a779-9864416af4f4"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "testuser1_2024-01-15T10-30-45@marutitest.com"
+          },
+          "user_name": {
+            "type": "string",
+            "example": "Test User 1 2024-01-15T10-30-45"
+          },
+          "role": {
+            "type": "integer",
+            "enum": [1, 2],
+            "example": 2,
+            "description": "User role (1 = Admin, 2 = Employee)"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2024-01-15T10:30:45.123Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2024-01-15T10:30:45.123Z"
+          }
+        }
+      },
+      "TestReference": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "25167593-beb4-455c-a779-9864416af4f4"
+          },
+          "name": {
+            "type": "string",
+            "example": "Test Reference 1 2024-01-15T10-30-45"
+          },
+          "mobile_no": {
+            "type": "string",
+            "example": "9100000000"
+          },
+          "category": {
+            "type": "string",
+            "enum": ["Carpenter", "Interior Designer", "Dealer", "Builder", "Direct/Walking", "Staff", "Relation", "Other"],
+            "example": "Carpenter"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2024-01-15T10:30:45.123Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2024-01-15T10:30:45.123Z"
+          }
+        }
+      },
+      "TestCustomer": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "35167593-beb4-455c-a779-9864416af4f4"
+          },
+          "name": {
+            "type": "string",
+            "example": "Test Customer 1 2024-01-15T10-30-45"
+          },
+          "mobile_no": {
+            "type": "string",
+            "example": "8200000000"
+          },
+          "address": {
+            "type": "string",
+            "example": "Test Address 1, Test City 2024-01-15T10-30-45"
+          },
+          "gst_number": {
+            "type": "string",
+            "nullable": true,
+            "example": "GST001304545"
+          },
+          "reference_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "example": "25167593-beb4-455c-a779-9864416af4f4"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2024-01-15T10:30:45.123Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2024-01-15T10:30:45.123Z"
+          }
+        }
+      },
+      "TestProduct": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "45167593-beb4-455c-a779-9864416af4f4"
+          },
+          "name": {
+            "type": "string",
+            "example": "Test Product 1 2024-01-15T10-30-45"
+          },
+          "description": {
+            "type": "string",
+            "example": "Test description for product 1 created at 2024-01-15T10-30-45"
+          },
+          "unit": {
+            "type": "string",
+            "enum": ["BOX", "CU.FEET", "CDM", "DOZEN", "KGS", "METER", "PCS", "R.FEET", "SET", "SQ.MT", "SQ.FT", "SQ.FT (Inches)"],
+            "example": "PCS"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2024-01-15T10:30:45.123Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2024-01-15T10:30:45.123Z"
+          }
+        }
+      },
+      "TestLocation": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "55167593-beb4-455c-a779-9864416af4f4"
+          },
+          "name": {
+            "type": "string",
+            "example": "Test Location 1 2024-01-15T10-30-45"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2024-01-15T10:30:45.123Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2024-01-15T10:30:45.123Z"
+          }
+        }
+      },
+      "TestQuotation": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "65167593-beb4-455c-a779-9864416af4f4"
+          },
+          "quotation_date": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2024-01-15T10:30:45.123Z"
+          },
+          "customer_id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "35167593-beb4-455c-a779-9864416af4f4"
+          },
+          "last_shared_date": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "example": null
+          },
+          "pdf_path": {
+            "type": "string",
+            "nullable": true,
+            "example": "quotations/65167593-beb4-455c-a779-9864416af4f4/quotation-65167593-beb4-455c-a779-9864416af4f4-1705315845123.pdf",
+            "description": "S3 path to the generated PDF file"
+          },
+          "remarks": {
+            "type": "string",
+            "example": "Test quotation 1 created at 2024-01-15T10-30-45"
+          },
+          "price_type": {
+            "type": "string",
+            "enum": ["Inclusive Tax", "Exclusive Tax"],
+            "example": "Inclusive Tax"
+          },
+          "created_by": {
+            "type": "string",
+            "format": "uuid",
+            "example": "15167593-beb4-455c-a779-9864416af4f4"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TestItem"
+            },
+            "description": "Array of items in this quotation (1-5 items per quotation)"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2024-01-15T10:30:45.123Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2024-01-15T10:30:45.123Z"
+          }
+        }
+      },
+      "TestItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "75167593-beb4-455c-a779-9864416af4f4"
+          },
+          "quotation_id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "65167593-beb4-455c-a779-9864416af4f4"
+          },
+          "product_id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "45167593-beb4-455c-a779-9864416af4f4"
+          },
+          "description": {
+            "type": "string",
+            "example": "Test item 1 for quotation 1"
+          },
+          "rate": {
+            "type": "number",
+            "format": "decimal",
+            "example": 125.50
+          },
+          "discount": {
+            "type": "number",
+            "format": "decimal",
+            "nullable": true,
+            "example": 10.00
+          },
+          "discount_type": {
+            "type": "string",
+            "enum": ["PERCENTAGE", "PER_PIECE"],
+            "nullable": true,
+            "example": "PERCENTAGE"
+          },
+          "unit": {
+            "type": "string",
+            "enum": ["BOX", "CU.FEET", "CDM", "DOZEN", "KGS", "METER", "PCS", "R.FEET", "SET", "SQ.MT", "SQ.FT", "SQ.FT (Inches)"],
+            "example": "PCS"
+          },
+          "images": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": ["quotations/65167593-beb4-455c-a779-9864416af4f4/items/1705315845123-abc123.jfif"],
+            "description": "Array of S3 paths to uploaded images"
+          },
+          "location_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "example": "55167593-beb4-455c-a779-9864416af4f4"
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 3
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2024-01-15T10:30:45.123Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2024-01-15T10:30:45.123Z"
+          }
+        }
+      }
+    }
+  }
+}

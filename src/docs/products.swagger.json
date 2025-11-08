@@ -1,0 +1,689 @@
+{
+  "paths": {
+    "/products/units": {
+      "get": {
+        "summary": "Get all available product units",
+        "description": "Retrieve a list of all available product units for dropdown/selection purposes",
+        "tags": ["Products"],
+        "servers": [
+          {
+            "url": "http://localhost:3000/api/v1",
+            "description": "Development server (API endpoints)"
+          },
+          {
+            "url": "https://api.maruti.com/api/v1",
+            "description": "Production server (API endpoints)"
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Product units retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductUnitsResponse"
+                },
+                "example": {
+                  "success": true,
+                  "message": "Product units retrieved successfully",
+                  "data": {
+                    "units": [
+                      "BOX",
+                      "CU.FEET",
+                      "CDM",
+                      "DOZEN",
+                      "KGS",
+                      "METER",
+                      "PCS",
+                      "R.FEET",
+                      "SET",
+                      "SQ.MT",
+                      "SQ.FT",
+                      "SQ.FT (Inches)"
+                    ],
+                    "count": 12
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Token required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/products": {
+      "get": {
+        "summary": "Get all products",
+        "description": "Retrieve a paginated list of all products with optional filtering by unit",
+        "tags": ["Products"],
+        "servers": [
+          {
+            "url": "http://localhost:3000/api/v1",
+            "description": "Development server (API endpoints)"
+          },
+          {
+            "url": "https://api.maruti.com/api/v1",
+            "description": "Production server (API endpoints)"
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number for pagination",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "example": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Number of products per page",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10,
+              "example": 10
+            }
+          },
+          {
+            "name": "unit",
+            "in": "query",
+            "description": "Filter by product unit",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["BOX", "CU.FEET", "CDM", "DOZEN", "KGS", "METER", "PCS", "R.FEET", "SET", "SQ.MT", "SQ.FT", "SQ.FT (Inches)"],
+              "example": "PCS"
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "description": "Filter by product name (partial match)",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 200,
+              "example": "wooden"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Products retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductsListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Token required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create new product",
+        "description": "Create a new product (Both Admin and Employee)",
+        "tags": ["Products"],
+        "servers": [
+          {
+            "url": "http://localhost:3000/api/v1",
+            "description": "Development server (API endpoints)"
+          },
+          {
+            "url": "https://api.maruti.com/api/v1",
+            "description": "Production server (API endpoints)"
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProductRequest"
+              },
+              "example": {
+                "name": "Premium Wooden Chair",
+                "description": "High-quality wooden chair with ergonomic design",
+                "unit": "PCS"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Product created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Product with this name already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "success": false,
+                  "message": "Product with this name already exists"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/products/{id}": {
+      "get": {
+        "summary": "Get product by ID",
+        "description": "Retrieve a specific product by its ID",
+        "tags": ["Products"],
+        "servers": [
+          {
+            "url": "http://localhost:3000/api/v1",
+            "description": "Development server (API endpoints)"
+          },
+          {
+            "url": "https://api.maruti.com/api/v1",
+            "description": "Production server (API endpoints)"
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Product UUID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Product retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid product ID format",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Product not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update product",
+        "description": "Update product information (Both Admin and Employee)",
+        "tags": ["Products"],
+        "servers": [
+          {
+            "url": "http://localhost:3000/api/v1",
+            "description": "Development server (API endpoints)"
+          },
+          {
+            "url": "https://api.maruti.com/api/v1",
+            "description": "Production server (API endpoints)"
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Product UUID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProductRequest"
+              },
+              "example": {
+                "name": "Updated Premium Wooden Chair",
+                "description": "Updated description for the wooden chair"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Product updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Product not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Product with this name already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "success": false,
+                  "message": "Product with this name already exists"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete product",
+        "description": "Delete a product (Admin only)",
+        "tags": ["Products"],
+        "servers": [
+          {
+            "url": "http://localhost:3000/api/v1",
+            "description": "Development server (API endpoints)"
+          },
+          {
+            "url": "https://api.maruti.com/api/v1",
+            "description": "Production server (API endpoints)"
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Product UUID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Product deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Admin access required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Product not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CreateProductRequest": {
+        "type": "object",
+        "required": ["name", "unit"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 200,
+            "example": "Premium Wooden Chair",
+            "description": "Product name"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 1000,
+            "example": "High-quality wooden chair with ergonomic design",
+            "description": "Product description (optional)"
+          },
+          "unit": {
+            "type": "string",
+            "enum": ["BOX", "CU.FEET", "CDM", "DOZEN", "KGS", "METER", "PCS", "R.FEET", "SET", "SQ.MT", "SQ.FT", "SQ.FT (Inches)"],
+            "example": "PCS",
+            "description": "Product unit of measurement"
+          }
+        }
+      },
+      "UpdateProductRequest": {
+        "type": "object",
+        "minProperties": 1,
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 200,
+            "example": "Updated Premium Wooden Chair",
+            "description": "Product name"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 1000,
+            "example": "Updated description for the wooden chair",
+            "description": "Product description"
+          },
+          "unit": {
+            "type": "string",
+            "enum": ["BOX", "CU.FEET", "CDM", "DOZEN", "KGS", "METER", "PCS", "R.FEET", "SET", "SQ.MT", "SQ.FT", "SQ.FT (Inches)"],
+            "example": "SET",
+            "description": "Product unit of measurement"
+          }
+        }
+      },
+      "Product": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "description": "Unique product identifier"
+          },
+          "name": {
+            "type": "string",
+            "example": "Premium Wooden Chair",
+            "description": "Product name"
+          },
+          "description": {
+            "type": "string",
+            "example": "High-quality wooden chair with ergonomic design",
+            "description": "Product description"
+          },
+          "unit": {
+            "type": "string",
+            "example": "PCS",
+            "description": "Product unit of measurement"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-07-26T12:00:42.250Z",
+            "description": "Creation timestamp"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-07-26T12:00:42.250Z",
+            "description": "Last update timestamp"
+          }
+        }
+      },
+      "ProductResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "message": {
+            "type": "string",
+            "example": "Product retrieved successfully"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "product": {
+                "$ref": "#/components/schemas/Product"
+              }
+            }
+          }
+        }
+      },
+      "ProductUnitsResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "message": {
+            "type": "string",
+            "example": "Product units retrieved successfully"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "units": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "example": ["BOX", "CU.FEET", "CDM", "DOZEN", "KGS", "METER", "PCS", "R.FEET", "SET", "SQ.MT", "SQ.FT", "SQ.FT (Inches)"],
+                "description": "Array of available product units"
+              },
+              "count": {
+                "type": "integer",
+                "example": 12,
+                "description": "Total number of available units"
+              }
+            }
+          }
+        }
+      },
+      "ProductsListResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "message": {
+            "type": "string",
+            "example": "Products retrieved successfully"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "products": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Product"
+                }
+              },
+              "pagination": {
+                "$ref": "#/components/schemas/Pagination"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+} 

@@ -1,0 +1,598 @@
+{
+  "paths": {
+    "/customers": {
+      "get": {
+        "summary": "Get all customers",
+        "description": "Retrieve a paginated list of all customers with optional filtering by reference",
+        "tags": ["Customers"],
+        "servers": [
+          {
+            "url": "http://localhost:3000/api/v1",
+            "description": "Development server (API endpoints)"
+          },
+          {
+            "url": "https://api.maruti.com/api/v1",
+            "description": "Production server (API endpoints)"
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number for pagination",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "example": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Number of customers per page",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10,
+              "example": 10
+            }
+          },
+          {
+            "name": "reference_id",
+            "in": "query",
+            "description": "Filter by reference ID",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "description": "Search in customer name and mobile number (partial match)",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 100,
+              "example": "john"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Customers retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomersListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Token required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create new customer",
+        "description": "Create a new customer (Both Admin and Employee)",
+        "tags": ["Customers"],
+        "servers": [
+          {
+            "url": "http://localhost:3000/api/v1",
+            "description": "Development server (API endpoints)"
+          },
+          {
+            "url": "https://api.maruti.com/api/v1",
+            "description": "Production server (API endpoints)"
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCustomerRequest"
+              },
+              "example": {
+                "name": "John Doe",
+                "mobile_no": "+1234567890",
+                "address": "123 Main Street, City, State 12345",
+                "reference_id": "123e4567-e89b-12d3-a456-426614174000"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Customer created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error or reference not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/customers/{id}": {
+      "get": {
+        "summary": "Get customer by ID",
+        "description": "Retrieve a specific customer by their ID with reference details",
+        "tags": ["Customers"],
+        "servers": [
+          {
+            "url": "http://localhost:3000/api/v1",
+            "description": "Development server (API endpoints)"
+          },
+          {
+            "url": "https://api.maruti.com/api/v1",
+            "description": "Production server (API endpoints)"
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Customer UUID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Customer retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid customer ID format",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Customer not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update customer",
+        "description": "Update customer information (Both Admin and Employee)",
+        "tags": ["Customers"],
+        "servers": [
+          {
+            "url": "http://localhost:3000/api/v1",
+            "description": "Development server (API endpoints)"
+          },
+          {
+            "url": "https://api.maruti.com/api/v1",
+            "description": "Production server (API endpoints)"
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Customer UUID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCustomerRequest"
+              },
+              "example": {
+                "name": "John Updated Doe",
+                "address": "456 New Street, City, State 54321"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Customer updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error or reference not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Customer not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete customer",
+        "description": "Delete a customer (Admin only)",
+        "tags": ["Customers"],
+        "servers": [
+          {
+            "url": "http://localhost:3000/api/v1",
+            "description": "Development server (API endpoints)"
+          },
+          {
+            "url": "https://api.maruti.com/api/v1",
+            "description": "Production server (API endpoints)"
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Customer UUID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Customer deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Admin access required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Customer not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CreateCustomerRequest": {
+        "type": "object",
+        "required": ["name", "mobile_no"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 100,
+            "example": "John Doe",
+            "description": "Customer name"
+          },
+          "mobile_no": {
+            "type": "string",
+            "pattern": "^[+]?[\\d\\s\\-()]+$",
+            "minLength": 10,
+            "maxLength": 15,
+            "example": "+1234567890",
+            "description": "Customer mobile number"
+          },
+          "address": {
+            "type": "string",
+            "maxLength": 500,
+            "example": "123 Main Street, City, State 12345",
+            "description": "Customer address (optional)"
+          },
+          "reference_id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "description": "Reference ID (optional)"
+          }
+        }
+      },
+      "UpdateCustomerRequest": {
+        "type": "object",
+        "minProperties": 1,
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 100,
+            "example": "John Updated Doe",
+            "description": "Customer name"
+          },
+          "mobile_no": {
+            "type": "string",
+            "pattern": "^[+]?[\\d\\s\\-()]+$",
+            "minLength": 10,
+            "maxLength": 15,
+            "example": "+1234567891",
+            "description": "Customer mobile number"
+          },
+          "address": {
+            "type": "string",
+            "maxLength": 500,
+            "example": "456 New Street, City, State 54321",
+            "description": "Customer address"
+          },
+          "reference_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "description": "Reference ID (can be null to remove reference)"
+          }
+        }
+      },
+      "Customer": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "description": "Unique customer identifier"
+          },
+          "name": {
+            "type": "string",
+            "example": "John Doe",
+            "description": "Customer name"
+          },
+          "mobile_no": {
+            "type": "string",
+            "example": "+1234567890",
+            "description": "Customer mobile number"
+          },
+          "address": {
+            "type": "string",
+            "example": "123 Main Street, City, State 12345",
+            "description": "Customer address"
+          },
+          "reference_id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "description": "Reference ID"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-07-26T12:00:42.250Z",
+            "description": "Creation timestamp"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-07-26T12:00:42.250Z",
+            "description": "Last update timestamp"
+          },
+          "reference": {
+            "type": "object",
+            "description": "Associated reference details",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "name": {
+                "type": "string"
+              },
+              "category": {
+                "type": "string"
+              },
+              "mobile_no": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "CustomerResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "message": {
+            "type": "string",
+            "example": "Customer retrieved successfully"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "customer": {
+                "$ref": "#/components/schemas/Customer"
+              }
+            }
+          }
+        }
+      },
+      "CustomersListResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "message": {
+            "type": "string",
+            "example": "Customers retrieved successfully"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "customers": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Customer"
+                }
+              },
+              "pagination": {
+                "$ref": "#/components/schemas/Pagination"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+} 

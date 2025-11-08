@@ -1,0 +1,13 @@
+node_modules/
+dist/
+build/
+coverage/
+.env
+.env.local
+.env.production
+.env.development
+*.log
+package-lock.json
+yarn.lock
+.git/
+.nyc_output/ 

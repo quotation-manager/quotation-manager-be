@@ -1,0 +1,1075 @@
+{
+  "paths": {
+    "/quotations/public/{id}": {
+      "get": {
+        "summary": "Get public quotation details",
+        "description": "Get quotation details without authentication. Only works if quotation has been shared within the last 3 months.",
+        "tags": ["Quotations"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Quotation ID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Quotation details retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/QuotationResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid quotation ID",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "403": {
+            "description": "Quotation not shared or link expired",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "404": {
+            "description": "Quotation not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/quotations": {
+      "get": {
+        "summary": "Get all quotations",
+        "description": "Retrieve a paginated list of quotations with optional filtering by customer, reference, start date, and end date",
+        "tags": ["Quotations"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number for pagination",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "example": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Number of items per page",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10,
+              "example": 10
+            }
+          },
+          {
+            "name": "customer_id",
+            "in": "query",
+            "description": "Filter by customer ID",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000"
+            }
+          },
+          {
+            "name": "reference_id",
+            "in": "query",
+            "description": "Filter by reference ID (filters customers by their reference)",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000"
+            }
+          },
+          {
+            "name": "start_date",
+            "in": "query",
+            "description": "Filter quotations from this date (ISO 8601 format)",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "example": "2025-01-01T00:00:00Z"
+            }
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "description": "Filter quotations until this date (ISO 8601 format)",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "example": "2025-12-31T23:59:59Z"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Quotations retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/QuotationsListResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid query parameters",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing token",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new quotation",
+        "description": "Create a new quotation with multiple items and optional images. Images should be uploaded as multipart/form-data with field names like 'items[0][images]', 'items[1][images]', etc.",
+        "tags": ["Quotations"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "quotation_date": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Quotation date and time",
+                    "example": "2025-01-15T10:30:00Z"
+                  },
+                  "customer_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Customer ID",
+                    "example": "123e4567-e89b-12d3-a456-426614174000"
+                  },
+                  "last_shared_date": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Last shared date (optional)",
+                    "example": "2025-01-16T14:00:00Z"
+                  },
+                  "remarks": {
+                    "type": "string",
+                    "description": "Optional remarks for the quotation (max 1000 characters)",
+                    "example": "Special pricing for bulk order",
+                    "maxLength": 1000
+                  },
+                  "price_type": {
+                    "type": "string",
+                    "enum": ["Inclusive Tax", "Exclusive Tax"],
+                    "description": "Price type for the quotation",
+                    "example": "Inclusive Tax",
+                    "default": "Inclusive Tax"
+                  },
+                  "items": {
+                    "type": "string",
+                    "description": "JSON string of items array",
+                    "example": "[{\"product_id\":\"123e4567-e89b-12d3-a456-426614174001\",\"description\":\"Custom description\",\"rate\":150.50,\"discount\":10.00,\"discount_type\":\"PERCENTAGE\",\"unit\":\"PCS\",\"location_id\":\"123e4567-e89b-12d3-a456-426614174002\"}]"
+                  },
+                  "items[0][images]": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "binary"
+                    },
+                                         "description": "Images for first item (max 1, 5MB each)"
+                  },
+                  "items[1][images]": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "binary"
+                    },
+                                         "description": "Images for second item (max 1, 5MB each)"
+                  }
+                },
+                "required": ["quotation_date", "customer_id", "items"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Quotation created successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/QuotationResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request data",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing token",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "404": {
+            "description": "Customer or product not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/quotations/{id}": {
+      "get": {
+        "summary": "Get quotation by ID",
+        "description": "Retrieve a specific quotation with all its items and associations",
+        "tags": ["Quotations"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Quotation ID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Quotation retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/QuotationResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid quotation ID",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing token",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "404": {
+            "description": "Quotation not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update quotation",
+        "description": "Update an existing quotation with items and images. This will replace all existing items.",
+        "tags": ["Quotations"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Quotation ID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "quotation_date": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Quotation date and time"
+                  },
+                  "customer_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Customer ID"
+                  },
+                  "last_shared_date": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Last shared date"
+                  },
+                  "remarks": {
+                    "type": "string",
+                    "description": "Optional remarks for the quotation (max 1000 characters)"
+                  },
+                  "price_type": {
+                    "type": "string",
+                    "enum": ["Inclusive Tax", "Exclusive Tax"],
+                    "description": "Price type for the quotation"
+                  },
+                  "items": {
+                    "type": "string",
+                    "description": "JSON string of items array"
+                  },
+                  "items[0][images]": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "binary"
+                    },
+                    "description": "Images for first item"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Quotation updated successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/QuotationResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request data",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing token",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "404": {
+            "description": "Quotation, customer, or product not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete quotation",
+        "description": "Delete a quotation and all its items (Admin only)",
+        "tags": ["Quotations"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Quotation ID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Quotation deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "message": { "type": "string", "example": "Quotation deleted successfully" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid quotation ID",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing token",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Admin access required",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "404": {
+            "description": "Quotation not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/quotations/{id}/shared-date": {
+      "patch": {
+        "summary": "Update last shared date",
+        "description": "Update the last shared date of a quotation to the current datetime",
+        "tags": ["Quotations"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Quotation ID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Last shared date updated successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/QuotationResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request data",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing token",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "404": {
+            "description": "Quotation not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/quotations/{id}/regenerate-pdf": {
+      "post": {
+        "summary": "Regenerate PDF for quotation",
+        "description": "Regenerate the PDF document for a quotation and upload it to S3",
+        "tags": ["Quotations"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Quotation ID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "PDF regenerated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "message": { "type": "string", "example": "PDF regenerated successfully" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "quotation": {
+                          "type": "object",
+                          "properties": {
+                            "id": { "type": "string", "format": "uuid" },
+                            "pdf_path": { "type": "string", "description": "S3 path to the generated PDF" }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing token",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "404": {
+            "description": "Quotation not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Item": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "123e4567-e89b-12d3-a456-426614174001"
+          },
+          "quotation_id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "product_id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "123e4567-e89b-12d3-a456-426614174002"
+          },
+          "description": {
+            "type": "string",
+            "example": "Custom item description",
+            "maxLength": 1000
+          },
+          "rate": {
+            "type": "number",
+            "format": "decimal",
+            "example": 150.50,
+            "minimum": 0
+          },
+          "discount": {
+            "type": "number",
+            "format": "decimal",
+            "example": 10.00,
+            "minimum": 0
+          },
+          "discount_type": {
+            "type": "string",
+            "enum": ["PERCENTAGE", "PER_PIECE"],
+            "example": "PERCENTAGE"
+          },
+          "unit": {
+            "type": "string",
+            "enum": ["BOX", "CU.FEET", "CDM", "DOZEN", "KGS", "METER", "PCS", "R.FEET", "SET", "SQ.MT", "SQ.FT", "SQ.FT (Inches)"],
+            "example": "PCS"
+          },
+          "images": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": ["quotations/123e4567-e89b-12d3-a456-426614174000/items/1640995200000-abc123.jpg"],
+                         "maxItems": 1
+          },
+
+          "location_id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "123e4567-e89b-12d3-a456-426614174003"
+          },
+          "quantity": {
+            "type": "integer",
+            "example": 1,
+            "minimum": 1,
+            "default": 1,
+            "description": "Quantity of the item"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-01-15T10:30:00Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-01-15T10:30:00Z"
+          },
+          "product": {
+            "$ref": "#/components/schemas/Product"
+          },
+          "location": {
+            "$ref": "#/components/schemas/Location"
+          }
+        }
+      },
+      "Quotation": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "quotation_date": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-01-15T10:30:00Z"
+          },
+          "customer_id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "123e4567-e89b-12d3-a456-426614174004"
+          },
+          "last_shared_date": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-01-16T14:00:00Z"
+          },
+          "pdf_path": {
+            "type": "string",
+            "description": "S3 path to the generated PDF file",
+            "example": "quotations/123e4567-e89b-12d3-a456-426614174000/quotation-123e4567-e89b-12d3-a456-426614174000-1640995200000.pdf"
+          },
+          "remarks": {
+            "type": "string",
+            "example": "Special pricing for bulk order",
+            "maxLength": 1000,
+            "description": "Optional remarks for the quotation"
+          },
+          "price_type": {
+            "type": "string",
+            "enum": ["Inclusive Tax", "Exclusive Tax"],
+            "example": "Inclusive Tax",
+            "description": "Price type for the quotation"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-01-15T10:30:00Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-01-15T10:30:00Z"
+          },
+          "customer": {
+            "$ref": "#/components/schemas/Customer"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Item"
+            }
+          }
+        }
+      },
+      "QuotationResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "message": {
+            "type": "string",
+            "example": "Quotation created successfully"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "quotation": {
+                "$ref": "#/components/schemas/Quotation"
+              }
+            }
+          }
+        }
+      },
+      "QuotationsListResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "message": {
+            "type": "string",
+            "example": "Quotations retrieved successfully"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "quotations": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Quotation"
+                }
+              },
+              "pagination": {
+                "$ref": "#/components/schemas/Pagination"
+              }
+            }
+          }
+        }
+      },
+      "CreateQuotationRequest": {
+        "type": "object",
+        "properties": {
+          "quotation_date": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-01-15T10:30:00Z"
+          },
+          "customer_id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "123e4567-e89b-12d3-a456-426614174004"
+          },
+          "last_shared_date": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-01-16T14:00:00Z"
+          },
+          "remarks": {
+            "type": "string",
+            "example": "Special pricing for bulk order",
+            "maxLength": 1000,
+            "description": "Optional remarks for the quotation"
+          },
+          "price_type": {
+            "type": "string",
+            "enum": ["Inclusive Tax", "Exclusive Tax"],
+            "example": "Inclusive Tax",
+            "description": "Price type for the quotation"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "product_id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "example": "123e4567-e89b-12d3-a456-426614174002"
+                },
+                "description": {
+                  "type": "string",
+                  "example": "Custom item description",
+                  "maxLength": 1000
+                },
+                "rate": {
+                  "type": "number",
+                  "format": "decimal",
+                  "example": 150.50,
+                  "minimum": 0
+                },
+                "discount": {
+                  "type": "number",
+                  "format": "decimal",
+                  "example": 10.00,
+                  "minimum": 0
+                },
+                "discount_type": {
+                  "type": "string",
+                  "enum": ["PERCENTAGE", "PER_PIECE"],
+                  "example": "PERCENTAGE"
+                },
+                "unit": {
+                  "type": "string",
+                  "enum": ["BOX", "CU.FEET", "CDM", "DOZEN", "KGS", "METER", "PCS", "R.FEET", "SET", "SQ.MT", "SQ.FT", "SQ.FT (Inches)"],
+                  "example": "PCS"
+                },
+                "location_id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "example": "123e4567-e89b-12d3-a456-426614174003"
+                },
+                "quantity": {
+                  "type": "integer",
+                  "example": 1,
+                  "minimum": 1,
+                  "default": 1,
+                  "description": "Quantity of the item"
+                }
+              },
+              "required": ["product_id", "rate"]
+            },
+            "minItems": 1
+          }
+        },
+        "required": ["quotation_date", "customer_id", "items"]
+      },
+      "CreateQuotationRequest": {
+        "type": "object",
+        "properties": {
+          "quotation_date": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-01-15T10:30:00Z"
+          },
+          "customer_id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "123e4567-e89b-12d3-a456-426614174004"
+          },
+          "last_shared_date": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-01-16T14:00:00Z"
+          },
+          "remarks": {
+            "type": "string",
+            "example": "Special pricing for bulk order",
+            "maxLength": 1000,
+            "description": "Optional remarks for the quotation"
+          },
+          "price_type": {
+            "type": "string",
+            "enum": ["Inclusive Tax", "Exclusive Tax"],
+            "example": "Inclusive Tax",
+            "description": "Price type for the quotation"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "product_id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "example": "123e4567-e89b-12d3-a456-426614174002"
+                },
+                "description": {
+                  "type": "string",
+                  "example": "Custom item description",
+                  "maxLength": 1000
+                },
+                "rate": {
+                  "type": "number",
+                  "format": "decimal",
+                  "example": 150.50,
+                  "minimum": 0
+                },
+                "discount": {
+                  "type": "number",
+                  "format": "decimal",
+                  "example": 10.00,
+                  "minimum": 0
+                },
+                "discount_type": {
+                  "type": "string",
+                  "enum": ["PERCENTAGE", "PER_PIECE"],
+                  "example": "PERCENTAGE"
+                },
+                "unit": {
+                  "type": "string",
+                  "enum": ["BOX", "CU.FEET", "CDM", "DOZEN", "KGS", "METER", "PCS", "R.FEET", "SET", "SQ.MT", "SQ.FT", "SQ.FT (Inches)"],
+                  "example": "PCS"
+                },
+                "location_id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "example": "123e4567-e89b-12d3-a456-426614174003"
+                },
+                "quantity": {
+                  "type": "integer",
+                  "example": 1,
+                  "minimum": 1,
+                  "default": 1,
+                  "description": "Quantity of the item"
+                }
+              },
+              "required": ["product_id", "rate"]
+            },
+            "minItems": 1
+          }
+        },
+        "required": ["quotation_date", "customer_id", "items"]
+      },
+      "UpdateQuotationRequest": {
+        "type": "object",
+        "properties": {
+          "quotation_date": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-01-15T10:30:00Z"
+          },
+          "customer_id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "123e4567-e89b-12d3-a456-426614174004"
+          },
+          "last_shared_date": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-01-16T14:00:00Z"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "product_id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "example": "123e4567-e89b-12d3-a456-426614174002"
+                },
+                "description": {
+                  "type": "string",
+                  "example": "Custom item description",
+                  "maxLength": 1000
+                },
+                "rate": {
+                  "type": "number",
+                  "format": "decimal",
+                  "example": 150.50,
+                  "minimum": 0
+                },
+                "discount": {
+                  "type": "number",
+                  "format": "decimal",
+                  "example": 10.00,
+                  "minimum": 0
+                },
+                "discount_type": {
+                  "type": "string",
+                  "enum": ["PERCENTAGE", "PER_PIECE"],
+                  "example": "PERCENTAGE"
+                },
+                "unit": {
+                  "type": "string",
+                  "enum": ["BOX", "CU.FEET", "CDM", "DOZEN", "KGS", "METER", "PCS", "R.FEET", "SET", "SQ.MT", "SQ.FT", "SQ.FT (Inches)"],
+                  "example": "PCS"
+                },
+                "location_id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "example": "123e4567-e89b-12d3-a456-426614174003"
+                },
+                "quantity": {
+                  "type": "integer",
+                  "example": 1,
+                  "minimum": 1,
+                  "default": 1,
+                  "description": "Quantity of the item"
+                }
+              },
+              "required": ["product_id", "rate"]
+            },
+            "minItems": 1
+          }
+        }
+      },
+      "UpdateLastSharedDateRequest": {
+        "type": "object",
+        "properties": {
+          "last_shared_date": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-01-16T14:00:00Z"
+          }
+        },
+        "required": ["last_shared_date"]
+      }
+    }
+  }
+} 

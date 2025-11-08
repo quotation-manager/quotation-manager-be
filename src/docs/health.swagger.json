@@ -1,0 +1,314 @@
+{
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Health check endpoint",
+        "description": "Check the health status of the server and its dependencies",
+        "tags": ["Health"],
+        "servers": [
+          {
+            "url": "http://localhost:3000",
+            "description": "Development server (Base URLs for health endpoints)"
+          },
+          {
+            "url": "https://api.maruti.com",
+            "description": "Production server (Base URLs for health endpoints)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Server is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthCheck"
+                },
+                "example": {
+                  "success": true,
+                  "message": "Server is healthy",
+                  "data": {
+                    "status": "healthy",
+                    "timestamp": "2024-01-26T12:00:00Z",
+                    "uptime": 3600.123,
+                    "environment": "development",
+                    "version": "1.0.0",
+                    "memory": {
+                      "used": 25.34,
+                      "total": 50.67,
+                      "external": 2.12
+                    },
+                    "cpu": {
+                      "user": 123456,
+                      "system": 78910
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Server is unhealthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health/detailed": {
+      "get": {
+        "summary": "Detailed health check endpoint",
+        "description": "Get detailed health information including database and external services",
+        "tags": ["Health"],
+        "servers": [
+          {
+            "url": "http://localhost:3000",
+            "description": "Development server (Base URLs for health endpoints)"
+          },
+          {
+            "url": "https://api.maruti.com",
+            "description": "Production server (Base URLs for health endpoints)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detailed server health information",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Detailed server health information"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "server": {
+                          "$ref": "#/components/schemas/ServerHealth"
+                        },
+                        "database": {
+                          "type": "object",
+                          "properties": {
+                            "status": {
+                              "type": "string",
+                              "example": "not_connected"
+                            },
+                            "latency": {
+                              "type": "number",
+                              "nullable": true,
+                              "example": null
+                            }
+                          }
+                        },
+                        "services": {
+                          "type": "object",
+                          "description": "External service health checks"
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "message": "Detailed server health information",
+                  "data": {
+                    "server": {
+                      "status": "healthy",
+                      "timestamp": "2024-01-26T12:00:00Z",
+                      "uptime": 3600.123,
+                      "environment": "development",
+                      "version": "1.0.0",
+                      "nodeVersion": "v18.17.0",
+                      "platform": "win32",
+                      "arch": "x64",
+                      "memory": {
+                        "used": 25.34,
+                        "total": 50.67,
+                        "external": 2.12,
+                        "rss": 45.23
+                      },
+                      "cpu": {
+                        "user": 123456,
+                        "system": 78910
+                      }
+                    },
+                    "database": {
+                      "status": "not_connected",
+                      "latency": null
+                    },
+                    "services": {}
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Detailed health check failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "HealthCheck": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "message": {
+            "type": "string",
+            "example": "Server is healthy"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "example": "healthy"
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2024-01-26T12:00:00Z"
+              },
+              "uptime": {
+                "type": "number",
+                "example": 3600.123
+              },
+              "environment": {
+                "type": "string",
+                "example": "development"
+              },
+              "version": {
+                "type": "string",
+                "example": "1.0.0"
+              },
+              "memory": {
+                "type": "object",
+                "properties": {
+                  "used": {
+                    "type": "number",
+                    "example": 25.34
+                  },
+                  "total": {
+                    "type": "number",
+                    "example": 50.67
+                  },
+                  "external": {
+                    "type": "number",
+                    "example": 2.12
+                  }
+                }
+              },
+              "cpu": {
+                "type": "object",
+                "properties": {
+                  "user": {
+                    "type": "number",
+                    "example": 123456
+                  },
+                  "system": {
+                    "type": "number",
+                    "example": 78910
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "ServerHealth": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "healthy"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2024-01-26T12:00:00Z"
+          },
+          "uptime": {
+            "type": "number",
+            "example": 3600.123
+          },
+          "environment": {
+            "type": "string",
+            "example": "development"
+          },
+          "version": {
+            "type": "string",
+            "example": "1.0.0"
+          },
+          "nodeVersion": {
+            "type": "string",
+            "example": "v18.17.0"
+          },
+          "platform": {
+            "type": "string",
+            "example": "win32"
+          },
+          "arch": {
+            "type": "string",
+            "example": "x64"
+          },
+          "memory": {
+            "type": "object",
+            "properties": {
+              "used": {
+                "type": "number",
+                "example": 25.34
+              },
+              "total": {
+                "type": "number",
+                "example": 50.67
+              },
+              "external": {
+                "type": "number",
+                "example": 2.12
+              },
+              "rss": {
+                "type": "number",
+                "example": 45.23
+              }
+            }
+          },
+          "cpu": {
+            "type": "object",
+            "properties": {
+              "user": {
+                "type": "number",
+                "example": 123456
+              },
+              "system": {
+                "type": "number",
+                "example": 78910
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+} 

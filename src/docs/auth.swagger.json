@@ -1,0 +1,230 @@
+{
+  "paths": {
+    "/auth/login": {
+      "post": {
+        "summary": "User login",
+        "description": "Authenticate user with email and password to get JWT access token",
+        "tags": ["Authentication"],
+        "servers": [
+          {
+            "url": "http://localhost:3000/api/v1",
+            "description": "Development server (API endpoints)"
+          },
+          {
+            "url": "https://api.maruti.com/api/v1",
+            "description": "Production server (API endpoints)"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              },
+              "example": {
+                "email": "admin@maruti.com",
+                "password": "admin123"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                },
+                "example": {
+                  "success": true,
+                  "message": "Login successful",
+                  "data": {
+                    "user": {
+                      "id": "15167593-beb4-455c-a779-9864416af4f4",
+                      "email": "admin@maruti.com",
+                      "role": 1,
+                      "createdAt": "2025-07-26T12:00:42.250Z",
+                      "updatedAt": "2025-07-26T12:00:42.250Z"
+                    },
+                    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                    "tokenType": "Bearer",
+                    "expiresIn": "24h"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "success": false,
+                  "message": "Invalid email or password"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                },
+                "example": {
+                  "success": false,
+                  "message": "Validation error",
+                  "errors": [
+                    {
+                      "field": "email",
+                      "message": "Please provide a valid email address"
+                    },
+                    {
+                      "field": "password",
+                      "message": "Password must be at least 6 characters long"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "LoginRequest": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "admin@maruti.com",
+            "description": "User's email address"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 6,
+            "example": "admin123",
+            "description": "User's password (minimum 6 characters)"
+          }
+        }
+      },
+      "LoginResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "message": {
+            "type": "string",
+            "example": "Login successful"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "user": {
+                "$ref": "#/components/schemas/User"
+              },
+              "token": {
+                "type": "string",
+                "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                "description": "JWT access token"
+              },
+              "tokenType": {
+                "type": "string",
+                "example": "Bearer",
+                "description": "Token type for Authorization header"
+              },
+              "expiresIn": {
+                "type": "string",
+                "example": "24h",
+                "description": "Token expiration time"
+              }
+            }
+          }
+        }
+      },
+      "ValidationError": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": false
+          },
+          "message": {
+            "type": "string",
+            "example": "Validation error"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "field": {
+                  "type": "string",
+                  "example": "email"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Please provide a valid email address"
+                }
+              }
+            }
+          }
+        }
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "15167593-beb4-455c-a779-9864416af4f4",
+            "description": "Unique user identifier"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "admin@maruti.com",
+            "description": "User's email address"
+          },
+          "user_name": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 100,
+            "example": "Admin User",
+            "description": "User's display name"
+          },
+          "role": {
+            "type": "integer",
+            "enum": [1, 2],
+            "example": 1,
+            "description": "User role (1 = Admin, 2 = Employee)"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-07-26T12:00:42.250Z",
+            "description": "Account creation timestamp"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-07-26T12:00:42.250Z",
+            "description": "Last update timestamp"
+          }
+        }
+      }
+    }
+  }
+} 

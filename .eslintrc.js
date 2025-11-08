@@ -1,0 +1,41 @@
+module.exports = {
+  env: {
+    browser: false,
+    commonjs: true,
+    es6: true,
+    node: true,
+    jest: true,
+  },
+  extends: [
+    'eslint:recommended',
+    'prettier',
+  ],
+  plugins: ['prettier'],
+  parserOptions: {
+    ecmaVersion: 2021,
+    sourceType: 'module',
+  },
+  rules: {
+    'prettier/prettier': 'error',
+    'no-console': 'warn',
+    'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+    'no-var': 'error',
+    'prefer-const': 'error',
+    'eqeqeq': ['error', 'always'],
+    'curly': ['error', 'all'],
+    'brace-style': ['error', '1tbs'],
+    'comma-dangle': ['error', 'always-multiline'],
+    'semi': ['error', 'always'],
+  },
+  globals: {
+    process: 'readonly',
+    Buffer: 'readonly',
+    __dirname: 'readonly',
+    __filename: 'readonly',
+    console: 'readonly',
+    module: 'readonly',
+    require: 'readonly',
+    exports: 'readonly',
+    global: 'readonly',
+  },
+}; 

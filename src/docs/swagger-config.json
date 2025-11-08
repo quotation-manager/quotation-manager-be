@@ -1,0 +1,121 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Maruti Backend API",
+    "version": "1.0.0",
+    "description": "A comprehensive Node.js Express API with best practices and documentation",
+    "contact": {
+      "name": "Maruti Team",
+      "email": "api@maruti.com"
+    },
+    "license": {
+      "name": "ISC",
+      "url": "https://opensource.org/licenses/ISC"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Development server (Base URLs for health endpoints)"
+    },
+    {
+      "url": "http://localhost:3000/api/v1",
+      "description": "Development server (API endpoints)"
+    },
+    {
+      "url": "https://api.maruti.com",
+      "description": "Production server (Base URLs for health endpoints)"
+    },
+    {
+      "url": "https://api.maruti.com/api/v1",
+      "description": "Production server (API endpoints)"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": false
+          },
+          "message": {
+            "type": "string",
+            "example": "Error message"
+          },
+          "error": {
+            "type": "string",
+            "example": "Detailed error information"
+          }
+        }
+      },
+      "SuccessResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "message": {
+            "type": "string",
+            "example": "Operation successful"
+          },
+          "data": {
+            "type": "object"
+          }
+        }
+      }
+    }
+  },
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "Health",
+      "description": "Health check endpoints for monitoring server status"
+    },
+    {
+      "name": "Authentication",
+      "description": "User authentication and JWT token management"
+    },
+    {
+      "name": "Users",
+      "description": "User management operations (Admin only)"
+    },
+    {
+      "name": "References",
+      "description": "Reference person management - track who referred customers"
+    },
+    {
+      "name": "Customers",
+      "description": "Customer management - main business entities"
+    },
+            {
+          "name": "Products",
+          "description": "Product catalog management - inventory items"
+        },
+        {
+          "name": "Locations",
+          "description": "Location management - where products are used"
+        },
+        {
+          "name": "Quotations",
+          "description": "Quotation management - customer quotations with items and images"
+        },
+        {
+          "name": "Seed",
+          "description": "Test data seeding and cleanup operations (Admin only)"
+        }
+  ]
+} 

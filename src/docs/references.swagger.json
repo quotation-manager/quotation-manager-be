@@ -1,0 +1,706 @@
+{
+  "paths": {
+    "/references/categories": {
+      "get": {
+        "summary": "Get all available reference categories",
+        "description": "Retrieve a list of all available reference categories for dropdown/selection purposes",
+        "tags": ["References"],
+        "servers": [
+          {
+            "url": "http://localhost:3000/api/v1",
+            "description": "Development server (API endpoints)"
+          },
+          {
+            "url": "https://api.maruti.com/api/v1",
+            "description": "Production server (API endpoints)"
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reference categories retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReferenceCategoriesResponse"
+                },
+                "example": {
+                  "success": true,
+                  "message": "Reference categories retrieved successfully",
+                  "data": {
+                    "categories": [
+                      "Carpenter",
+                      "Interior Designer",
+                      "Dealer",
+                      "Builder",
+                      "Direct/Walking",
+                      "Staff",
+                      "Relation",
+                      "Other"
+                    ],
+                    "count": 8
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Token required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/references": {
+      "get": {
+        "summary": "Get all references",
+        "description": "Retrieve a paginated list of all references with optional filtering by category",
+        "tags": ["References"],
+        "servers": [
+          {
+            "url": "http://localhost:3000/api/v1",
+            "description": "Development server (API endpoints)"
+          },
+          {
+            "url": "https://api.maruti.com/api/v1",
+            "description": "Production server (API endpoints)"
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number for pagination",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "example": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Number of references per page",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10,
+              "example": 10
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "description": "Filter by reference category",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["Carpenter", "Interior Designer", "Dealer", "Builder", "Direct/Walking", "Staff", "Relation", "Other"],
+              "example": "Carpenter"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "description": "Search in reference name and mobile number (partial match)",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 100,
+              "example": "john"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "References retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReferencesListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Token required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create new reference",
+        "description": "Create a new reference person (Both Admin and Employee)",
+        "tags": ["References"],
+        "servers": [
+          {
+            "url": "http://localhost:3000/api/v1",
+            "description": "Development server (API endpoints)"
+          },
+          {
+            "url": "https://api.maruti.com/api/v1",
+            "description": "Production server (API endpoints)"
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReferenceRequest"
+              },
+              "example": {
+                "name": "John Carpenter",
+                "mobile_no": "+1234567890",
+                "category": "Carpenter"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Reference created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReferenceResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/references/{id}": {
+      "get": {
+        "summary": "Get reference by ID",
+        "description": "Retrieve a specific reference by their ID with associated customers",
+        "tags": ["References"],
+        "servers": [
+          {
+            "url": "http://localhost:3000/api/v1",
+            "description": "Development server (API endpoints)"
+          },
+          {
+            "url": "https://api.maruti.com/api/v1",
+            "description": "Production server (API endpoints)"
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Reference UUID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reference retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReferenceResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid reference ID format",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Reference not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update reference",
+        "description": "Update reference information (Both Admin and Employee)",
+        "tags": ["References"],
+        "servers": [
+          {
+            "url": "http://localhost:3000/api/v1",
+            "description": "Development server (API endpoints)"
+          },
+          {
+            "url": "https://api.maruti.com/api/v1",
+            "description": "Production server (API endpoints)"
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Reference UUID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateReferenceRequest"
+              },
+              "example": {
+                "name": "John Updated Carpenter",
+                "category": "Interior Designer"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Reference updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReferenceResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Reference not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete reference",
+        "description": "Delete a reference (Admin only). Cannot delete if reference has associated customers",
+        "tags": ["References"],
+        "servers": [
+          {
+            "url": "http://localhost:3000/api/v1",
+            "description": "Development server (API endpoints)"
+          },
+          {
+            "url": "https://api.maruti.com/api/v1",
+            "description": "Production server (API endpoints)"
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Reference UUID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reference deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Cannot delete reference with associated customers",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Cannot delete reference. It has associated customers"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "customerCount": {
+                          "type": "integer",
+                          "example": 3
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Admin access required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Reference not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CreateReferenceRequest": {
+        "type": "object",
+        "required": ["name", "category"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 100,
+            "example": "John Carpenter",
+            "description": "Reference person name"
+          },
+          "mobile_no": {
+            "type": "string",
+            "pattern": "^[+]?[\\d\\s\\-()]+$",
+            "minLength": 10,
+            "maxLength": 15,
+            "example": "+1234567890",
+            "description": "Reference person mobile number (optional)"
+          },
+          "category": {
+            "type": "string",
+            "enum": ["Carpenter", "Interior Designer", "Dealer", "Builder", "Direct/Walking", "Staff", "Relation", "Other"],
+            "example": "Carpenter",
+            "description": "Reference category"
+          }
+        }
+      },
+      "UpdateReferenceRequest": {
+        "type": "object",
+        "minProperties": 1,
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 100,
+            "example": "John Updated Carpenter",
+            "description": "Reference person name"
+          },
+          "mobile_no": {
+            "type": "string",
+            "pattern": "^[+]?[\\d\\s\\-()]+$",
+            "minLength": 10,
+            "maxLength": 15,
+            "example": "+1234567891",
+            "description": "Reference person mobile number"
+          },
+          "category": {
+            "type": "string",
+            "enum": ["Carpenter", "Interior Designer", "Dealer", "Builder", "Direct/Walking", "Staff", "Relation", "Other"],
+            "example": "Interior Designer",
+            "description": "Reference category"
+          }
+        }
+      },
+      "Reference": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "description": "Unique reference identifier"
+          },
+          "name": {
+            "type": "string",
+            "example": "John Carpenter",
+            "description": "Reference person name"
+          },
+          "mobile_no": {
+            "type": "string",
+            "example": "+1234567890",
+            "description": "Reference person mobile number"
+          },
+          "category": {
+            "type": "string",
+            "example": "Carpenter",
+            "description": "Reference category"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-07-26T12:00:42.250Z",
+            "description": "Creation timestamp"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-07-26T12:00:42.250Z",
+            "description": "Last update timestamp"
+          },
+          "customers": {
+            "type": "array",
+            "description": "Associated customers",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "name": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "ReferenceResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "message": {
+            "type": "string",
+            "example": "Reference retrieved successfully"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "reference": {
+                "$ref": "#/components/schemas/Reference"
+              }
+            }
+          }
+        }
+      },
+      "ReferencesListResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "message": {
+            "type": "string",
+            "example": "References retrieved successfully"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "references": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Reference"
+                }
+              },
+              "pagination": {
+                "$ref": "#/components/schemas/Pagination"
+              }
+            }
+          }
+        }
+      },
+      "ReferenceCategoriesResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "message": {
+            "type": "string",
+            "example": "Reference categories retrieved successfully"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "categories": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "example": ["Carpenter", "Interior Designer", "Dealer", "Builder", "Direct/Walking", "Staff", "Relation", "Other"],
+                "description": "Array of available reference categories"
+              },
+              "count": {
+                "type": "integer",
+                "example": 8,
+                "description": "Total number of available categories"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+} 
