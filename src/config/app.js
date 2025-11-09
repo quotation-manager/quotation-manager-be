@@ -47,7 +47,6 @@ const createApp = () => {
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
   }));
-  app.options('*', cors());
   
 
   // Logging middleware
