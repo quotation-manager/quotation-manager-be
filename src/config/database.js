@@ -8,6 +8,12 @@ const config = {
     username: process.env.DB_USER || 'maruti_user',
     password: process.env.DB_PASSWORD || 'your_password',
     dialect: 'postgres',
+    dialectOptions: {
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    },
     logging: false,
     define: {
       timestamps: true,
@@ -29,6 +35,12 @@ const config = {
     username: process.env.DB_USER || 'maruti_user',
     password: process.env.DB_PASSWORD || 'your_password',
     dialect: 'postgres',
+    dialectOptions: {
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    },
     logging: false,
     define: {
       timestamps: true,
@@ -44,6 +56,12 @@ const config = {
     username: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     dialect: 'postgres',
+    dialectOptions: {
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    },
     logging: false,
     define: {
       timestamps: true,
