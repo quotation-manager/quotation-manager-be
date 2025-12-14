@@ -1,0 +1,68 @@
+name: Deploy Backend to EC2
+
+on:
+  push:
+    branches:
+      - development
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: Development  
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Configure AWS CLI
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ vars.AWS_REGION }}
+
+    - name: Download SSH key from S3
+      run: |
+        aws s3 cp s3://maruti-development-new/environment-variables/config/maruti-development.pem  ec2_key.pem
+        chmod 600 ec2_key.pem
+
+    - name: Download environment file from S3
+      run: |
+        aws s3 cp s3://maruti-development-new/environment-variables/config/.env .env
+
+    - name: Get EC2 Public IP
+      id: ec2ip
+      run: |
+        IP=$(aws ec2 describe-instances \
+          --instance-ids ${{ vars.EC2_INSTANCE_ID }} \
+          --query "Reservations[0].Instances[0].PublicIpAddress" \
+          --output text)
+        echo "EC2_IP=$IP" >> $GITHUB_ENV
+
+    - name: Deploy to EC2 with DB migration
+      run: |
+        ssh -o StrictHostKeyChecking=no -i ec2_key.pem ${{ vars.EC2_USER }}@${{ env.EC2_IP }} << 'EOF'
+          set -e
+          # Add Node and npm to PATH
+          export PATH="$HOME/.nvm/versions/node/v18.17.1/bin:$PATH"
+
+          cd /var/www/html/maruti-development/maruti-be
+          
+          echo "Pulling latest code..."
+          git pull origin development
+          
+          echo "Installing dependencies..."
+          npm install
+
+          echo "Running migrations..."
+          npx sequelize-cli db:migrate  
+
+          echo "Stopping current app..."
+          pm2 stop test.json || echo "PM2 process not found, continuing..."
+
+          echo "Deleting old process..."
+          pm2 delete test.json || echo "PM2 process not found for delete, continuing..."
+
+          echo "Restarting app..."
+          pm2 start test.json 
+        EOF
