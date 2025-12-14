@@ -16,7 +16,7 @@ const https = require('https');
  */
 const loadLetterheadImage = async () => {
   try {
-    const letterheadPath = path.join(__dirname, '../assets/Tulip_Letter_Head.jpg');
+    const letterheadPath = path.join(__dirname, '../assets/sunny_letter_head.jpeg');
     const imageBuffer = fs.readFileSync(letterheadPath);
     const base64 = imageBuffer.toString('base64');
     return `data:image/jpeg;base64,${base64}`;
